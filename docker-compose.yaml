@@ -1,20 +1,17 @@
 version: '3.2'
 services:
   db:
-    image: mongo:4.2
+    image: postgres
     container_name: db
     restart: always
     ports:
-      - 27017:27017
+      - "5432:5432"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: user
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: database
-      # MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
-      # MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
-      # MONGO_INITDB_DATABASE: ${DB_NAME}
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: banco123
+        POSTGRES_DB: music_db
 
-#  rabbitmq:
+    #  rabbitmq:
 #    image: "rabbitmq:3.8-management-alpine"
 #    container_name: nodejs-rabbitmq-rabbitmq
 #    hostname: rabbitmq

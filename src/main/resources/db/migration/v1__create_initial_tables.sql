@@ -1,0 +1,20 @@
+
+
+CREATE TABLE songs (
+    id TEXT PRIMARY KEY UNIQUE NOT NULL,
+    fileName VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    artist VARCHAR(255) NOT NULL,
+    views INT NOT NULL,
+);
+
+
+CREATE TABLE USERS (
+    id TEXT PRIMARY KEY UNIQUE NOT NULL,
+    username VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    points INT NOT NULL,
+    PRIMARY KEY (id)
+);
+

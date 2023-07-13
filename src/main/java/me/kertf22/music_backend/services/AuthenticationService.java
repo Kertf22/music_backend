@@ -17,5 +17,4 @@ public class AuthenticationService implements UserDetailsService {
         return userRepository.findByEmail(username);
     }
 
-
 }

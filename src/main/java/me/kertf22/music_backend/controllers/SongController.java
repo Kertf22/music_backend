@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,7 +41,7 @@ public class SongController {
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getSong(@PathVariable(value = "id") String id) {
+    public ResponseEntity<?> getSong(@PathVariable(value = "id") UUID id) {
         Optional<SongModel> song = songRepository.findById(id);
 
         if (song.isEmpty()) {
@@ -51,7 +52,7 @@ public class SongController {
     }
     @GetMapping("/file/{id}")
     public ResponseEntity<?>
-    readSong(@PathVariable(value = "id") String id) {
+    readSong(@PathVariable(value = "id") UUID id) {
         Optional<SongModel> song = songRepository.findById(id);
 
         if (song.isEmpty()) {
@@ -87,7 +88,7 @@ public class SongController {
         String fileName = storageService.store(file);
         songModel.setFileName(fileName);
         songModel.setViews(0);
-        SongModel insertedSong = songRepository.insert(songModel);
+        SongModel insertedSong = songRepository.save(songModel);
         return ResponseEntity.status(HttpStatus.CREATED).body(insertedSong);
     } catch (Exception e) {
         return ResponseEntity.badRequest().body(e.getMessage());

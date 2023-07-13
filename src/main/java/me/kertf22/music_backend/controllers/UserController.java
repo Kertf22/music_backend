@@ -3,7 +3,7 @@ package me.kertf22.music_backend.controllers;
 import jakarta.validation.Valid;
 import me.kertf22.music_backend.dtos.AuthenticationDTO;
 import me.kertf22.music_backend.dtos.RegisterDTO;
-import me.kertf22.music_backend.infra.security.TokenService;
+//import me.kertf22.music_backend.infra.security.TokenService;
 import me.kertf22.music_backend.model.UserModel;
 import me.kertf22.music_backend.repositories.UserRepository;
 import org.springframework.beans.BeanUtils;
@@ -23,10 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/users")
 public class UserController {
 
-
     private final UserRepository repository;
 
-    private final TokenService tokenService;
+//    private final TokenService tokenService;
     @Autowired
     private AuthenticationManager authenticationManager;
     @Autowired
@@ -38,7 +37,7 @@ public class UserController {
     public ResponseEntity<Object> login(@RequestBody @Valid AuthenticationDTO authenticationDTO) {
        var usernamePassword = new UsernamePasswordAuthenticationToken(authenticationDTO.email(), authenticationDTO.password());
        var auth = authenticationManager.authenticate(usernamePassword);
-       var token = tokenService.generateToken((User) auth.getPrincipal());
+//       var token = tokenService.generateToken((User) auth.getPrincipal());
 
         return ResponseEntity.ok().build();
     }

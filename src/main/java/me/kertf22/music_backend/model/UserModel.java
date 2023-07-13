@@ -1,23 +1,27 @@
 package me.kertf22.music_backend.model;
 
+import jakarta.persistence.*;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.UUID;
 
-@Document
+@Entity
+@Table(name="users")
 public class UserModel implements UserDetails {
 
     @Id
-    private String id;
-
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+    @Column(nullable = false,unique = true)
     private String username;
-
+    @Column(nullable = false,unique = true)
     private String email;
+    @Column(nullable = false)
     private String password;
-
 
 //    private String token;
 //
@@ -25,13 +29,14 @@ public class UserModel implements UserDetails {
 //
 //    private String refreshTokenExpiration;
 
+    @Column(nullable = false)
     private Integer points;
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

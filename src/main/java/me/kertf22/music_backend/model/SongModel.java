@@ -1,28 +1,34 @@
 package me.kertf22.music_backend.model;
 
-import org.bson.types.ObjectId;
+import jakarta.persistence.*;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigInteger;
+import java.util.UUID;
 
-@Document
+@Entity
+@Table(name = "songs")
 public class SongModel {
 
     @Id
-    private String id;
-
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+    @Column(nullable = false, unique = true)
     private String fileName;
 
+    @Column(nullable = false)
     private String title;
-    private String artist;
+    @Column(nullable = false)
 
+    private String artist;
+    @Column(nullable = false)
     private Integer views;
-    public String getId() {
+
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
