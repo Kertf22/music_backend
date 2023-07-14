@@ -1,14 +1,16 @@
 package me.kertf22.music_backend.model;
 
 import jakarta.persistence.*;
-import org.springframework.data.annotation.Id;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.UUID;
 
 @Entity
 @Table(name = "songs")
-public class SongModel {
+public class SongModel implements Serializable {
+
+    private  static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

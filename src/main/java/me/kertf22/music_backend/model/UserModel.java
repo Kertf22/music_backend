@@ -2,16 +2,18 @@ package me.kertf22.music_backend.model;
 
 import jakarta.persistence.*;
 import org.springframework.context.annotation.Primary;
-import org.springframework.data.annotation.Id;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.UUID;
 
 @Entity
 @Table(name="users")
-public class UserModel implements UserDetails {
+public class UserModel implements UserDetails, Serializable {
+
+    private  static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
