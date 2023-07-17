@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 
 
 public record SongRecordDTO(
-                            @NotBlank String title,
-                            @NotBlank String artist
+                            @NotBlank String title
                           ) {
 }

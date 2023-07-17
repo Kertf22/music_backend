@@ -1,8 +1,7 @@
 
-
 CREATE TABLE songs (
     id TEXT PRIMARY KEY UNIQUE NOT NULL,
-    fileName VARCHAR(255) NOT NULL,
+    filename VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL,
     artist VARCHAR(255) NOT NULL,
     views INT NOT NULL
@@ -16,4 +15,3 @@ CREATE TABLE USERS (
     email VARCHAR(255) NOT NULL,
     points INT NOT NULL
 );
-

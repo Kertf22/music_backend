@@ -4,7 +4,11 @@ import jakarta.validation.Valid;
 import me.kertf22.music_backend.dtos.AuthenticationDTO;
 import me.kertf22.music_backend.dtos.RegisterDTO;
 //import me.kertf22.music_backend.infra.security.TokenService;
+import me.kertf22.music_backend.infra.security.TokenService;
+import me.kertf22.music_backend.model.DomainUser;
+import me.kertf22.music_backend.model.FollowModel;
 import me.kertf22.music_backend.model.UserModel;
+import me.kertf22.music_backend.repositories.FollowRepository;
 import me.kertf22.music_backend.repositories.UserRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,54 +16,61 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserRepository repository;
-
-//    private final TokenService tokenService;
+    @Autowired
+    private TokenService tokenService;
     @Autowired
     private AuthenticationManager authenticationManager;
     @Autowired
-    public UserController(UserRepository userRepository) {
-        this.repository = userRepository;
+    private UserRepository repository;
+
+    @Autowired
+    private FollowRepository followRepository;
+
+    public UserController() {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody @Valid AuthenticationDTO authenticationDTO) {
-       var usernamePassword = new UsernamePasswordAuthenticationToken(authenticationDTO.email(), authenticationDTO.password());
-       var auth = authenticationManager.authenticate(usernamePassword);
-//       var token = tokenService.generateToken((User) auth.getPrincipal());
+    public ResponseEntity<Object> login(@RequestBody @Valid AuthenticationDTO data) {
+        var usernamePassword = new UsernamePasswordAuthenticationToken(data.email(), data.password());
 
-        return ResponseEntity.ok().build();
+        var auth = authenticationManager.authenticate(usernamePassword);
+        var token = tokenService.generateToken((UserModel) auth.getPrincipal());
+
+        return ResponseEntity.ok().body(token);
     }
-
 
     @PostMapping("/register")
     public ResponseEntity<Object> register(@RequestBody @Valid RegisterDTO registerDTO) {
         UserDetails existUserWithEmail = this.repository.findByEmail(registerDTO.email());
 
-        if(existUserWithEmail != null) {
+        if (existUserWithEmail != null) {
             return ResponseEntity.badRequest().build();
         }
 
+
         UserDetails existUserWithUsername = this.repository.findByUsername(registerDTO.username());
 
-        if(existUserWithUsername != null) {
+        if (existUserWithUsername != null) {
             return ResponseEntity.badRequest().build();
         }
 
         String encryptedPassword = new BCryptPasswordEncoder().encode(registerDTO.password());
 
         UserModel user = new UserModel();
+
         BeanUtils.copyProperties(registerDTO, user);
         user.setPassword(encryptedPassword);
         user.setPoints(0);
@@ -67,5 +78,55 @@ public class UserController {
         this.repository.save(user);
 
         return ResponseEntity.ok().build();
+    }
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<Object> profile(@PathVariable(name = "id") String id) {
+        Optional userO = repository.findById(id);
+
+        if(userO.isEmpty()) {
+            return ResponseEntity.badRequest().body("User does not exist!");
+        }
+
+        UserModel user = (UserModel) userO.get();
+        DomainUser domainUser = new DomainUser(user);
+        return ResponseEntity.ok().body(domainUser);
+    }
+    @GetMapping("/me")
+    public ResponseEntity<Object> me() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        UserModel user = repository.findByUsername(auth.getName());
+
+        DomainUser domainUser = new DomainUser(user);
+
+        return ResponseEntity.ok().body(domainUser);
+    }
+
+    @GetMapping("/follow/{id}")
+    public ResponseEntity<Object> follow(@PathVariable(name = "id") String id) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        UserModel user = repository.findByUsername(auth.getName());
+        Optional<UserModel> followedO = repository.findById(id);
+
+        if(followedO.isEmpty()) {
+            return ResponseEntity.badRequest().body("User does not exist!");
+        }
+
+        UserModel followed = followedO.get();
+
+        Optional<?> followOptional = followRepository.findByFollowedIdAndFollowingId(followed.getId(), user.getId());
+        if(followOptional.isPresent()) {
+            FollowModel follow = (FollowModel) followOptional.get();
+            followRepository.delete(follow);
+
+            return ResponseEntity.ok().body("Unfollowed user " + followed.getArtist_name() + "!");
+        }
+
+        FollowModel follow = new FollowModel(followed, user,LocalDateTime.now());
+
+        followRepository.save(follow);
+
+        return ResponseEntity.ok().body( "Followed user " + followed.getArtist_name() + "!");
     }
 }

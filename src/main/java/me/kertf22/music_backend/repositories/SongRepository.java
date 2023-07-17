@@ -6,9 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 @Repository
-public interface SongRepository extends JpaRepository<SongModel, UUID> {
+public interface SongRepository extends JpaRepository<SongModel, String> {
 
-    boolean existsSongByFileNameEquals(String fileName);
-
+//    boolean existsSongByAudio_FileEquals(String audio_file);
+//    boolean existsSongByBanner_ImageEquals(String banner_image);
     boolean existsSongByTitleEquals(String title);
 }

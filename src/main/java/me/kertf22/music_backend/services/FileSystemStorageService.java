@@ -46,11 +46,13 @@ public class FileSystemStorageService implements StorageService {
     public String store(MultipartFile file) {
         String filename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
         String extension = filename.substring(filename.lastIndexOf(".") + 1);
-        filename= UUID.randomUUID().toString() + "." + extension;
+        filename = UUID.randomUUID().toString() + "." + extension;
+
         try {
             if (file.isEmpty()) {
                 throw new StorageException("Failed to store empty file " + filename);
             }
+
             if (filename.contains("..")) {
                 // This is a security check
                 throw new StorageException(
@@ -60,6 +62,7 @@ public class FileSystemStorageService implements StorageService {
             // check mime type only accept mp3
 
             if (!Arrays.asList(allowedMimeTypes).contains(file.getContentType())) {
+                System.out.println(file.getContentType());
                 throw new StorageException("File type not allowed");
             }
 
