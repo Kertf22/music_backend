@@ -43,6 +43,20 @@ public class SongModel implements Serializable {
     @Column()
     private LocalDateTime deleted_at;
 
+    public SongModel() {
+    }
+
+    public SongModel(String banner_image, String audio_file, String title, UserModel artist, Integer views, LocalDateTime createdAt, LocalDateTime updated_at, LocalDateTime deleted_at) {
+        this.banner_image = banner_image;
+        this.audio_file = audio_file;
+        this.title = title;
+        this.artist = artist;
+        this.views = views;
+        this.createdAt = createdAt;
+        this.updated_at = updated_at;
+        this.deleted_at = deleted_at;
+    }
+
     public void setArtist(UserModel artist) {
         this.artist = artist;
     }

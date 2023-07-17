@@ -2,18 +2,24 @@ package me.kertf22.music_backend.controllers;
 
 import jakarta.validation.Valid;
 import me.kertf22.music_backend.dtos.SongRecordDTO;
-import me.kertf22.music_backend.enums.StorageType;
+import me.kertf22.music_backend.dtos.UploadDTO;
+import me.kertf22.music_backend.domain.DomainSong;
+import me.kertf22.music_backend.exceptions.CustomException;
 import me.kertf22.music_backend.model.SongModel;
+import me.kertf22.music_backend.model.UserModel;
 import me.kertf22.music_backend.repositories.SongRepository;
+import me.kertf22.music_backend.repositories.UserRepository;
 import me.kertf22.music_backend.services.StorageService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,29 +30,35 @@ public class SongController {
     private final StorageService storageService;
     private final SongRepository songRepository;
 
+    private final UserRepository userRepository;
+
     @Autowired
-    public SongController(StorageService storageService, SongRepository songRepository) {
+    public SongController(StorageService storageService, SongRepository songRepository, UserRepository userRepository) {
         this.storageService = storageService;
         this.songRepository = songRepository;
+        this.userRepository = userRepository;
     }
 
     @Secured({})
     @GetMapping
-    public ResponseEntity<List<SongModel>> getSongs() {
+    public ResponseEntity<List<DomainSong>> getSongs() {
         List<SongModel> songs = songRepository.findAll();
-        return ResponseEntity.status(HttpStatus.OK).body(songs);
+
+        List<DomainSong> mappedSongs = songs.stream().map(DomainSong::new).toList();
+
+        return ResponseEntity.status(HttpStatus.OK).body(mappedSongs);
     }
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getSong(@PathVariable(value = "id") String id) {
+    public ResponseEntity<DomainSong > getSong(@PathVariable(value = "id") String id) {
         Optional<SongModel> song = songRepository.findById(id);
 
         if (song.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Song not found!");
+            throw new CustomException("Song not found!",HttpStatus.NOT_FOUND);
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(song.get());
+        return ResponseEntity.status(HttpStatus.OK).body(new DomainSong(song.get()));
     }
 
     @GetMapping("/file/{id}")
@@ -55,7 +67,7 @@ public class SongController {
         Optional<SongModel> song = songRepository.findById(id);
 
         if (song.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Song not found!");
+            throw new CustomException("Song not found!",HttpStatus.NOT_FOUND);
         }
 
         Resource data = storageService.loadAsResource(song.get().getAudio_file());
@@ -69,34 +81,43 @@ public class SongController {
                 .body(data);
     }
 
-    @PostMapping(consumes = "multipart/form-data")
-    public ResponseEntity<?> createSong(
-            @RequestPart("song") @Valid SongRecordDTO songRecordDTO,
-            @RequestPart("audio") MultipartFile audio,
-            @RequestPart("image") MultipartFile banner
+
+    @PostMapping(value = "/upload", consumes = "multipart/form-data")
+    public ResponseEntity<String> uploadFile(
+            @RequestPart("file") MultipartFile file,
+            @RequestPart("file_data") UploadDTO file_data
     ) {
 
-        var songModel = new SongModel();
-        BeanUtils.copyProperties(songRecordDTO, songModel);
+        String file_path = storageService.store(file, file_data.storageType());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(file_path);
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createSong(
+            @RequestBody @Valid SongRecordDTO songRecordDTO
+    ) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        UserModel user = userRepository.findByUsername(auth.getName());
+        var songModel = new SongModel(
+                songRecordDTO.banner_image(),
+                songRecordDTO.audio_file(),
+                songRecordDTO.title(),
+                user,
+                0,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null
+        );
 
         if (songRepository.existsSongByTitleEquals(songModel.getTitle())) {
-
-            return ResponseEntity.badRequest().body("T:taken");
-
+            throw new CustomException("Song with this title already exists!",HttpStatus.FORBIDDEN);
         }
-        try {
 
-            System.out.println("Uploading the file...");
-            String audio_file = storageService.store(audio, StorageType.AUDIO);
-            String banner_file = storageService.store(banner, StorageType.IMAGE);
-//            songModel.setAudio_file(fileName);
-//            songModel.setViews(0);
-//            SongModel insertedSong = songRepository.save(songModel);
+        SongModel insertedSong = songRepository.save(songModel);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body("T:created");
-
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(new DomainSong(insertedSong));
     }
 }

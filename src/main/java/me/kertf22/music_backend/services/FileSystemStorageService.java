@@ -2,7 +2,7 @@ package me.kertf22.music_backend.services;
 
 import jakarta.annotation.PostConstruct;
 import me.kertf22.music_backend.enums.StorageType;
-import me.kertf22.music_backend.exceptions.StorageException;
+import me.kertf22.music_backend.exceptions.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -42,7 +42,7 @@ public class FileSystemStorageService implements StorageService {
         try {
             Files.createDirectories(rootLocation);
         } catch (IOException e) {
-            throw new StorageException("Could not initialize storage location", e);
+            throw new CustomException("Could not initialize storage location", e);
         }
     }
 
@@ -54,12 +54,12 @@ public class FileSystemStorageService implements StorageService {
 
         try {
             if (file.isEmpty()) {
-                throw new StorageException("Failed to store empty file " + filename);
+                throw new CustomException("Failed to store empty file " + filename);
             }
 
             if (filename.contains("..")) {
                 // This is a security check
-                throw new StorageException(
+                throw new CustomException(
                         "Cannot store file with relative path outside current directory "
                                 + filename);
             }
@@ -68,16 +68,16 @@ public class FileSystemStorageService implements StorageService {
                 if(Arrays.asList(allowedMimeTypes).contains(file.getContentType())){
                     filename = audioLocation + "/" + filename;
                 } else {
-                    throw new StorageException("File type not allowed");
+                    throw new CustomException("File type not allowed");
                 }
             } else if(type == StorageType.IMAGE) {
                 if(Arrays.asList(imagesMimeTypes).contains(file.getContentType())){
                     filename = imageLocation + "/" + filename;
                 } else {
-                    throw new StorageException("File type not allowed");
+                    throw new CustomException("File type not allowed");
                 }
             } else {
-                throw new StorageException("File type not allowed");
+                throw new CustomException("File type not allowed");
             }
 
             try (InputStream inputStream = file.getInputStream()) {
@@ -86,7 +86,7 @@ public class FileSystemStorageService implements StorageService {
             }
         }
         catch (IOException e) {
-            throw new StorageException("Failed to store file " + filename, e);
+            throw new CustomException("Failed to store file " + filename, e);
         }
 
         return filename;
@@ -110,7 +110,7 @@ public class FileSystemStorageService implements StorageService {
                     "Could not read file: " + filename);
         }
         catch (MalformedURLException | FileNotFoundException e) {
-            throw new StorageException("Could not read file: " + filename, e);
+            throw new CustomException("Could not read file: " + filename, e);
         }
     }
 

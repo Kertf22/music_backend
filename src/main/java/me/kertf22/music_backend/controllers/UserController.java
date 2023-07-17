@@ -4,21 +4,21 @@ import jakarta.validation.Valid;
 import me.kertf22.music_backend.dtos.AuthenticationDTO;
 import me.kertf22.music_backend.dtos.RegisterDTO;
 //import me.kertf22.music_backend.infra.security.TokenService;
+import me.kertf22.music_backend.exceptions.CustomException;
 import me.kertf22.music_backend.infra.security.TokenService;
-import me.kertf22.music_backend.model.DomainUser;
+import me.kertf22.music_backend.domain.DomainUser;
 import me.kertf22.music_backend.model.FollowModel;
 import me.kertf22.music_backend.model.UserModel;
 import me.kertf22.music_backend.repositories.FollowRepository;
 import me.kertf22.music_backend.repositories.UserRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.RequestEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -57,14 +57,14 @@ public class UserController {
         UserDetails existUserWithEmail = this.repository.findByEmail(registerDTO.email());
 
         if (existUserWithEmail != null) {
-            return ResponseEntity.badRequest().build();
+            throw new CustomException("Email / Username already used!!", HttpStatus.BAD_REQUEST);
         }
 
 
         UserDetails existUserWithUsername = this.repository.findByUsername(registerDTO.username());
 
         if (existUserWithUsername != null) {
-            return ResponseEntity.badRequest().build();
+            throw new CustomException("Email / Username already used!!", HttpStatus.BAD_REQUEST);
         }
 
         String encryptedPassword = new BCryptPasswordEncoder().encode(registerDTO.password());
@@ -84,7 +84,7 @@ public class UserController {
         Optional userO = repository.findById(id);
 
         if(userO.isEmpty()) {
-            return ResponseEntity.badRequest().body("User does not exist!");
+            throw new CustomException("User does not exist!", HttpStatus.NOT_FOUND);
         }
 
         UserModel user = (UserModel) userO.get();
@@ -110,7 +110,7 @@ public class UserController {
         Optional<UserModel> followedO = repository.findById(id);
 
         if(followedO.isEmpty()) {
-            return ResponseEntity.badRequest().body("User does not exist!");
+            throw new CustomException("User does not exist!", HttpStatus.NOT_FOUND);
         }
 
         UserModel followed = followedO.get();
@@ -119,7 +119,6 @@ public class UserController {
         if(followOptional.isPresent()) {
             FollowModel follow = (FollowModel) followOptional.get();
             followRepository.delete(follow);
-
             return ResponseEntity.ok().body("Unfollowed user " + followed.getArtist_name() + "!");
         }
 
