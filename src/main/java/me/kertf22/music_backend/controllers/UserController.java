@@ -11,6 +11,7 @@ import me.kertf22.music_backend.model.FollowModel;
 import me.kertf22.music_backend.model.UserModel;
 import me.kertf22.music_backend.repositories.FollowRepository;
 import me.kertf22.music_backend.repositories.UserRepository;
+import me.kertf22.music_backend.services.UserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,9 +36,10 @@ public class UserController {
     private AuthenticationManager authenticationManager;
     @Autowired
     private UserRepository repository;
-
     @Autowired
     private FollowRepository followRepository;
+    @Autowired
+    private UserService userService;
 
     public UserController() {
     }
@@ -54,48 +56,25 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<Object> register(@RequestBody @Valid RegisterDTO registerDTO) {
-        UserDetails existUserWithEmail = this.repository.findByEmail(registerDTO.email());
 
-        if (existUserWithEmail != null) {
-            throw new CustomException("Email / Username already used!!", HttpStatus.BAD_REQUEST);
-        }
-
-
-        UserDetails existUserWithUsername = this.repository.findByUsername(registerDTO.username());
-
-        if (existUserWithUsername != null) {
-            throw new CustomException("Email / Username already used!!", HttpStatus.BAD_REQUEST);
-        }
-
-        String encryptedPassword = new BCryptPasswordEncoder().encode(registerDTO.password());
-
-        UserModel user = new UserModel();
-
-        BeanUtils.copyProperties(registerDTO, user);
-        user.setPassword(encryptedPassword);
-        user.setPoints(0);
-
-        this.repository.save(user);
+        userService.save(registerDTO);
 
         return ResponseEntity.ok().build();
     }
+
     @GetMapping("/profile/{id}")
     public ResponseEntity<Object> profile(@PathVariable(name = "id") String id) {
-        Optional userO = repository.findById(id);
+        UserModel user = userService.getUserProfile(id);
 
-        if(userO.isEmpty()) {
-            throw new CustomException("User does not exist!", HttpStatus.NOT_FOUND);
-        }
-
-        UserModel user = (UserModel) userO.get();
         DomainUser domainUser = new DomainUser(user);
+
         return ResponseEntity.ok().body(domainUser);
     }
     @GetMapping("/me")
     public ResponseEntity<Object> me() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        UserModel user = repository.findByUsername(auth.getName());
+        UserModel user = userService.getUser(auth.getName());
 
         DomainUser domainUser = new DomainUser(user);
 
@@ -105,27 +84,7 @@ public class UserController {
     @GetMapping("/follow/{id}")
     public ResponseEntity<Object> follow(@PathVariable(name = "id") String id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        UserModel user = repository.findByUsername(auth.getName());
-        Optional<UserModel> followedO = repository.findById(id);
-
-        if(followedO.isEmpty()) {
-            throw new CustomException("User does not exist!", HttpStatus.NOT_FOUND);
-        }
-
-        UserModel followed = followedO.get();
-
-        Optional<?> followOptional = followRepository.findByFollowedIdAndFollowingId(followed.getId(), user.getId());
-        if(followOptional.isPresent()) {
-            FollowModel follow = (FollowModel) followOptional.get();
-            followRepository.delete(follow);
-            return ResponseEntity.ok().body("Unfollowed user " + followed.getArtist_name() + "!");
-        }
-
-        FollowModel follow = new FollowModel(followed, user,LocalDateTime.now());
-
-        followRepository.save(follow);
-
-        return ResponseEntity.ok().body( "Followed user " + followed.getArtist_name() + "!");
+        String message = userService.follow(auth.getName(), id);
+        return ResponseEntity.ok().body(message);
     }
 }

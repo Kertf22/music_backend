@@ -5,6 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 //import me.kertf22.music_backend.infra.security.TokenService;
+import me.kertf22.music_backend.exceptions.CustomException;
+import me.kertf22.music_backend.model.UserModel;
 import me.kertf22.music_backend.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
@@ -28,9 +31,11 @@ public class SecurityFilter extends OncePerRequestFilter {
 
        if(token != null) {
            var login = tokenService.validateToken(token);
-            UserDetails user = userRepository.findByEmail(login);
+            Optional<UserModel> user = userRepository.findByEmail(login);
 
-          var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+            if(user.isEmpty()) throw new CustomException("Authenticated user not found");
+
+          var authentication = new UsernamePasswordAuthenticationToken(user.get(), null, user.get().getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
        }
         filterChain.doFilter(request, response);

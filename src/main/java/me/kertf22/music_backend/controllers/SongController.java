@@ -9,7 +9,7 @@ import me.kertf22.music_backend.model.SongModel;
 import me.kertf22.music_backend.model.UserModel;
 import me.kertf22.music_backend.repositories.SongRepository;
 import me.kertf22.music_backend.repositories.UserRepository;
-import me.kertf22.music_backend.services.StorageService;
+import me.kertf22.music_backend.services.storage.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
@@ -100,12 +100,17 @@ public class SongController {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        UserModel user = userRepository.findByUsername(auth.getName());
+        Optional<UserModel> user = userRepository.findByUsername(auth.getName());
+
+        if (user.isEmpty()) {
+            throw new CustomException("User not found!",HttpStatus.NOT_FOUND);
+        }
+
         var songModel = new SongModel(
                 songRecordDTO.banner_image(),
                 songRecordDTO.audio_file(),
                 songRecordDTO.title(),
-                user,
+                user.get(),
                 0,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
