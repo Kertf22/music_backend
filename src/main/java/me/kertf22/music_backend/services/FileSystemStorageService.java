@@ -1,6 +1,7 @@
 package me.kertf22.music_backend.services;
 
 import jakarta.annotation.PostConstruct;
+import me.kertf22.music_backend.enums.StorageType;
 import me.kertf22.music_backend.exceptions.StorageException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -25,6 +26,9 @@ import java.util.stream.Stream;
 @Service
 public class FileSystemStorageService implements StorageService {
     String[] allowedMimeTypes = {"audio/mpeg","audio/mp4","audio/wav","audio/flac"};
+    String[] imagesMimeTypes = {"image/png","image/jpeg"};
+    String imageLocation = "image";
+    String audioLocation = "audio";
     private final Path rootLocation;
 
     @Autowired
@@ -43,7 +47,7 @@ public class FileSystemStorageService implements StorageService {
     }
 
     @Override
-    public String store(MultipartFile file) {
+    public String store(MultipartFile file, StorageType type) {
         String filename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
         String extension = filename.substring(filename.lastIndexOf(".") + 1);
         filename = UUID.randomUUID().toString() + "." + extension;
@@ -59,10 +63,20 @@ public class FileSystemStorageService implements StorageService {
                         "Cannot store file with relative path outside current directory "
                                 + filename);
             }
-            // check mime type only accept mp3
 
-            if (!Arrays.asList(allowedMimeTypes).contains(file.getContentType())) {
-                System.out.println(file.getContentType());
+            if(type == StorageType.AUDIO) {
+                if(Arrays.asList(allowedMimeTypes).contains(file.getContentType())){
+                    filename = audioLocation + "/" + filename;
+                } else {
+                    throw new StorageException("File type not allowed");
+                }
+            } else if(type == StorageType.IMAGE) {
+                if(Arrays.asList(imagesMimeTypes).contains(file.getContentType())){
+                    filename = imageLocation + "/" + filename;
+                } else {
+                    throw new StorageException("File type not allowed");
+                }
+            } else {
                 throw new StorageException("File type not allowed");
             }
 

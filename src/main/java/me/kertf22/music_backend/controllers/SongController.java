@@ -2,6 +2,7 @@ package me.kertf22.music_backend.controllers;
 
 import jakarta.validation.Valid;
 import me.kertf22.music_backend.dtos.SongRecordDTO;
+import me.kertf22.music_backend.enums.StorageType;
 import me.kertf22.music_backend.model.SongModel;
 import me.kertf22.music_backend.repositories.SongRepository;
 import me.kertf22.music_backend.services.StorageService;
@@ -86,12 +87,13 @@ public class SongController {
         try {
 
             System.out.println("Uploading the file...");
-            String fileName = storageService.store(audio);
-            songModel.setAudio_file(fileName);
-            songModel.setViews(0);
-            SongModel insertedSong = songRepository.save(songModel);
+            String audio_file = storageService.store(audio, StorageType.AUDIO);
+            String banner_file = storageService.store(banner, StorageType.IMAGE);
+//            songModel.setAudio_file(fileName);
+//            songModel.setViews(0);
+//            SongModel insertedSong = songRepository.save(songModel);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(insertedSong);
+            return ResponseEntity.status(HttpStatus.CREATED).body("T:created");
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
