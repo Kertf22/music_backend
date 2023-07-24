@@ -14,12 +14,10 @@ public interface StorageService {
     void init();
 
     String store(MultipartFile file, StorageType type);
-
-
     Path load(String filename);
-
     Resource loadAsResource(String filename);
 
+    String validateFile(MultipartFile file, StorageType type);
 //    void deleteAll();
 
 }

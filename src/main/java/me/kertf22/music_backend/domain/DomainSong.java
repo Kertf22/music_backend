@@ -1,12 +1,13 @@
 package me.kertf22.music_backend.domain;
 
+import me.kertf22.music_backend.model.ImageModel;
 import me.kertf22.music_backend.model.SongModel;
 
 import java.time.LocalDateTime;
 
 public class DomainSong {
     private String id;
-    private String banner_image;
+    private ImageModel[] banners;
     private String audio_file;
     private String title;
     private DomainUser artist;
@@ -19,9 +20,10 @@ public class DomainSong {
     public DomainSong() {
     }
 
-    public DomainSong(String id, String banner_image, String audio_file, String title, DomainUser artist, Integer views, LocalDateTime createdAt, LocalDateTime updated_at, LocalDateTime deleted_at) {
+
+    public DomainSong(String id, ImageModel[] banners, String audio_file, String title, DomainUser artist, Integer views, LocalDateTime createdAt, LocalDateTime updated_at, LocalDateTime deleted_at) {
         this.id = id;
-        this.banner_image = banner_image;
+        this.banners = banners;
         this.audio_file = audio_file;
         this.title = title;
         this.artist = artist;
@@ -33,8 +35,8 @@ public class DomainSong {
 
     public DomainSong(SongModel songModel){
         this.id = songModel.getId();
-        this.banner_image = songModel.getBanner_image();
-        this.audio_file = songModel.getAudio_file();
+        this.banners = songModel.getImages();
+        this.audio_file = songModel.getAudio().getPath();
         this.title = songModel.getTitle();
         this.artist = new DomainUser(songModel.getArtist());
         this.views = songModel.getViews();
@@ -51,12 +53,12 @@ public class DomainSong {
         this.id = id;
     }
 
-    public String getBanner_image() {
-        return banner_image;
+    public ImageModel[] getBanners() {
+        return banners;
     }
 
-    public void setBanner_image(String banner_image) {
-        this.banner_image = banner_image;
+    public void setBanners(ImageModel[] banners) {
+        this.banners = banners;
     }
 
     public String getAudio_file() {

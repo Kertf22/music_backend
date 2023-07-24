@@ -13,22 +13,14 @@ public class SongModel implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    public String getBanner_image() {
-        return banner_image;
-    }
-    public void setBanner_image(String banner_image) {
-        this.banner_image = banner_image;
-    }
-    public String getAudio_file() {
-        return audio_file;
-    }
-    public void setAudio_file(String audio_file) {
-        this.audio_file = audio_file;
-    }
-    @Column(nullable = false, unique = true)
-    private String banner_image;
-    @Column(nullable = false, unique = true)
-    private String audio_file;
+    @ManyToOne(targetEntity = ImageModel.class)
+    @JoinColumn(name = "image_id", referencedColumnName = "id")
+    private ImageModel[] images;
+
+    @OneToOne(targetEntity = AudioModel.class)
+    @JoinColumn(name = "audio_id", referencedColumnName = "id")
+    private AudioModel audio;
+
     @Column(nullable = false)
     private String title;
     @ManyToOne(targetEntity = UserModel.class)
@@ -46,9 +38,9 @@ public class SongModel implements Serializable {
     public SongModel() {
     }
 
-    public SongModel(String banner_image, String audio_file, String title, UserModel artist, Integer views, LocalDateTime createdAt, LocalDateTime updated_at, LocalDateTime deleted_at) {
-        this.banner_image = banner_image;
-        this.audio_file = audio_file;
+public SongModel(ImageModel[] images, AudioModel audio, String title, UserModel artist, Integer views, LocalDateTime createdAt, LocalDateTime updated_at, LocalDateTime deleted_at) {
+        this.images = images;
+        this.audio = audio;
         this.title = title;
         this.artist = artist;
         this.views = views;
@@ -111,5 +103,21 @@ public class SongModel implements Serializable {
 
     public void setViews(Integer views) {
         this.views = views;
+    }
+
+    public ImageModel[] getImages() {
+        return images;
+    }
+
+    public void setImages(ImageModel[] images) {
+        this.images = images;
+    }
+
+    public AudioModel getAudio() {
+        return audio;
+    }
+
+    public void setAudio(AudioModel audio) {
+        this.audio = audio;
     }
 }

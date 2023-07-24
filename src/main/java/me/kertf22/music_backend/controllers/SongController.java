@@ -70,7 +70,7 @@ public class SongController {
             throw new CustomException("Song not found!",HttpStatus.NOT_FOUND);
         }
 
-        Resource data = storageService.loadAsResource(song.get().getAudio_file());
+        Resource data = storageService.loadAsResource(song.get().getAudio().getPath());
 
         SongModel songModel = song.get();
         songModel.setViews(songModel.getViews() + 1);
@@ -83,14 +83,14 @@ public class SongController {
 
 
     @PostMapping(value = "/upload", consumes = "multipart/form-data")
-    public ResponseEntity<String> uploadFile(
+    public ResponseEntity<List<String>> uploadFile(
             @RequestPart("file") MultipartFile file,
             @RequestPart("file_data") UploadDTO file_data
     ) {
 
         String file_path = storageService.store(file, file_data.storageType());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(file_path);
+        return ResponseEntity.status(HttpStatus.CREATED).body(List.of(file_path));
     }
 
     @PostMapping
@@ -106,23 +106,23 @@ public class SongController {
             throw new CustomException("User not found!",HttpStatus.NOT_FOUND);
         }
 
-        var songModel = new SongModel(
-                songRecordDTO.banner_image(),
-                songRecordDTO.audio_file(),
-                songRecordDTO.title(),
-                user.get(),
-                0,
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                null
-        );
+//        var songModel = new SongModel(
+//                songRecordDTO.banner_image(),
+//                songRecordDTO.audio_file(),
+//                songRecordDTO.title(),
+//                user.get(),
+//                0,
+//                LocalDateTime.now(),
+//                LocalDateTime.now(),
+//                null
+//        );
 
-        if (songRepository.existsSongByTitleEquals(songModel.getTitle())) {
-            throw new CustomException("Song with this title already exists!",HttpStatus.FORBIDDEN);
-        }
-
-        SongModel insertedSong = songRepository.save(songModel);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(new DomainSong(insertedSong));
+//        if (songRepository.existsSongByTitleEquals(songModel.getTitle())) {
+//            throw new CustomException("Song with this title already exists!",HttpStatus.FORBIDDEN);
+//        }
+//
+//        SongModel insertedSong = songRepository.save(songModel);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(new DomainSong(insertedSong));
+        return ResponseEntity.status(HttpStatus.CREATED).body("Not implemented yet!");
     }
 }

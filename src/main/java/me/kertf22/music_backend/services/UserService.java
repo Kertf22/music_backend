@@ -27,13 +27,13 @@ public class UserService {
     public void save(RegisterDTO data) {
         Optional<UserModel> existUserWithEmail = this.repository.findByEmail(data.email());
 
-        if (existUserWithEmail.isEmpty()) {
+        if (!existUserWithEmail.isEmpty()) {
             throw new CustomException("Email / Username already used!!", HttpStatus.BAD_REQUEST);
         }
 
         Optional<UserModel>  existUserWithUsername = this.repository.findByUsername(data.username());
 
-        if (existUserWithUsername.isEmpty()) {
+        if (!existUserWithUsername.isEmpty()) {
             throw new CustomException("Email / Username already used!!", HttpStatus.BAD_REQUEST);
         }
 

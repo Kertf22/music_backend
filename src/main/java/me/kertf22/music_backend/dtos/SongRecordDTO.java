@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record SongRecordDTO(
         @NotBlank String title,
-        @NotBlank String banner_image,
-        @NotBlank String audio_file
+        @NotBlank String[] image_paths,
+        @NotBlank String audio_path
 ) {
 }
