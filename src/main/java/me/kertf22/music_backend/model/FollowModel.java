@@ -11,7 +11,6 @@ public class FollowModel {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-
     @ManyToOne()
     @JoinColumn(name = "followed_user_id")
     private UserModel followed;

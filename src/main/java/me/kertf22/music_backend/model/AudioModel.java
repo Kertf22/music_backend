@@ -4,9 +4,12 @@ import jakarta.persistence.*;
 import me.kertf22.music_backend.enums.ExtensionFile;
 import me.kertf22.music_backend.enums.StorageType;
 
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "audio")
-public class AudioModel implements File {
+public class AudioModel implements Serializable,  FileModel {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -17,22 +20,28 @@ public class AudioModel implements File {
     @Column(nullable = false)
     private ExtensionFile extension;
     @Column(nullable = false)
-    private Number size;
+    private Integer size;
     @Column(nullable = false)
     private StorageType type;
 
     @Column(nullable = false)
-    private Number duration;
+    private Float duration;
 
-    public Number getDuration() {
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+    @Column()
+    private LocalDateTime deletedAt;
+    public Float getDuration() {
         return duration;
     }
 
-    public void setDuration(Number duration) {
+    public void setDuration(Float duration) {
         this.duration = duration;
     }
 
-    public AudioModel(String id, String name, String path, ExtensionFile extension, Number size, Number duration) {
+    public AudioModel(String id, String name, String path, ExtensionFile extension, Integer size, Float duration) {
         this.id = id;
         this.name = name;
         this.path = path;
@@ -40,6 +49,8 @@ public class AudioModel implements File {
         this.size = size;
         this.duration = duration;
         this.type = StorageType.AUDIO;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     public AudioModel() {
@@ -87,12 +98,12 @@ public class AudioModel implements File {
     }
 
     @Override
-    public Number getSize() {
+    public Integer getSize() {
         return size;
     }
 
     @Override
-    public void setSize(Number size) {
+    public void setSize(Integer size) {
         this.size = size;
     }
 
@@ -104,5 +115,29 @@ public class AudioModel implements File {
     @Override
     public void setType(StorageType type) {
         this.type = type;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

@@ -4,10 +4,16 @@ import jakarta.persistence.*;
 import me.kertf22.music_backend.enums.ExtensionFile;
 import me.kertf22.music_backend.enums.StorageType;
 
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
-@Entity
+@Entity(name = "image")
 @Table(name = "image")
-public class ImageModel implements File {
+public class ImageModel implements Serializable, FileModel {
+    @Serial
+    private  static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -18,15 +24,22 @@ public class ImageModel implements File {
     @Column(nullable = false)
     private ExtensionFile extension;
     @Column(nullable = false)
-    private Number size;
+    private Integer size;
     @Column(nullable = false)
     private StorageType type;
     @Column(nullable = false)
-    private Number width;
+    private Integer width;
     @Column(nullable = false)
-    private Number height;
+    private Integer height;
 
-    public ImageModel(String id, String name, String path, ExtensionFile extension, Number size, Number width, Number height) {
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+    @Column()
+    private LocalDateTime deletedAt;
+
+    public ImageModel(String id, String name, String path, ExtensionFile extension, Integer size, Integer width, Integer height) {
         this.id = id;
         this.name = name;
         this.path = path;
@@ -34,25 +47,28 @@ public class ImageModel implements File {
         this.size = size;
         this.width = width;
         this.height = height;
+        this.type = StorageType.IMAGE;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     public ImageModel() {
         super();
     }
 
-    public Number getHeight() {
+    public Integer getHeight() {
         return height;
     }
 
-    public void setHeight(Number height) {
+    public void setHeight(Integer height) {
         this.height = height;
     }
 
-    public Number getWidth() {
+    public Integer getWidth() {
         return width;
     }
 
-    public void setWidth(Number width) {
+    public void setWidth(Integer width) {
         this.width = width;
     }
 
@@ -97,12 +113,12 @@ public class ImageModel implements File {
     }
 
     @Override
-    public Number getSize() {
+    public Integer getSize() {
         return size;
     }
 
     @Override
-    public void setSize(Number size) {
+    public void setSize(Integer size) {
         this.size = size;
     }
 
@@ -114,5 +130,29 @@ public class ImageModel implements File {
     @Override
     public void setType(StorageType type) {
         this.type = type;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

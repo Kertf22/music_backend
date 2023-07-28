@@ -1,8 +1,13 @@
 package me.kertf22.music_backend.services.storage;
 
 import jakarta.annotation.PostConstruct;
+import javazoom.jl.decoder.Bitstream;
+import javazoom.jl.decoder.Header;
+import me.kertf22.music_backend.enums.ExtensionFile;
 import me.kertf22.music_backend.enums.StorageType;
 import me.kertf22.music_backend.exceptions.CustomException;
+import me.kertf22.music_backend.model.AudioModel;
+import me.kertf22.music_backend.model.ImageModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -10,9 +15,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,13 +28,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
-import java.awt.*;
-import java.awt.image.*;
-import java.io.*;
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.geom.AffineTransform;
-
+import me.kertf22.music_backend.model.FileModel;
 @Service
 public class FileSystemStorageService implements StorageService {
     String[] allowedMimeTypes = {"audio/mpeg", "audio/mp4", "audio/wav", "audio/flac"};
@@ -52,46 +54,17 @@ public class FileSystemStorageService implements StorageService {
 
     @Override
     public String store(MultipartFile file, StorageType type) {
-
-        var filename = validateFile(file, type);
+        var filename = this.validateFile(file, type);
 
         try (InputStream inputStream = file.getInputStream()) {
             Files.copy(inputStream, this.rootLocation.resolve(filename),
                     StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new CustomException("Failed to store file " + e.toString(), e);
-        }
-
-
-        if(type == StorageType.IMAGE) {
-            File newFile = new File(this.rootLocation.resolve(filename).toUri());
-
-            BufferedImage img = null;
-            try { img = ImageIO.read(newFile); }
-            catch (IOException e) { e.printStackTrace(System.out); }
-                    System.out.println("  Image read.");
-            if (img != null) {
-
-               var image =  img.getScaledInstance(100, -1, Image.SCALE_SMOOTH);
-                System.out.println("  Image resize.");
-                img = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-                img.getGraphics().drawImage(image, 0, 0, null);
-                System.out.println("  Image draw.");
-//                try {
-//                    Files.createFile(this.rootLocation.resolve(filename));
-//                    Files.write(this.rootLocation.resolve(filename), ((DataBufferByte) img.getData().getDataBuffer()).getData());
-//                } catch (IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-
-                try { ImageIO.write(img, "png", newFile); }
-                catch (IOException e) { e.printStackTrace(System.out); }
-                System.out.println("  Image writed.");
-            }
-
-        }
+        };
 
         return filename;
+
     }
 
     @Override
@@ -135,7 +108,7 @@ public class FileSystemStorageService implements StorageService {
 
         if (type == StorageType.AUDIO) {
             if (!Arrays.asList(allowedMimeTypes).contains(file.getContentType())) {
-                throw new CustomException("File type not allowed");
+                throw new CustomException("File type not allowed - " +file.getContentType());
             }
 
             filename = audioLocation + "/" + filename;
@@ -146,7 +119,6 @@ public class FileSystemStorageService implements StorageService {
                 throw new CustomException("File type not allowed");
             }
 
-
             filename = imageLocation + "/" + filename;
         } else {
             throw new CustomException("File type not allowed");
@@ -155,11 +127,54 @@ public class FileSystemStorageService implements StorageService {
         return filename;
     }
 
+    public ImageModel storeImage(MultipartFile file) {
+        String filename = this.store(file, StorageType.IMAGE);
 
-    // scale a grayscale image
-//    public static BufferedImage resize(BufferedImage img, int newHeight) {
-//
-//
-//
-//    }
+        try {
+            File newFile = new File(this.rootLocation.resolve(filename).toUri());
+            BufferedImage bufferedImage = ImageIO.read(newFile);
+            int width = bufferedImage.getWidth();
+            int height = bufferedImage.getHeight();
+
+            return new ImageModel(
+                    UUID.randomUUID().toString(),
+                    filename,
+                    filename,
+                    ExtensionFile.valueOf(StringUtils.getFilenameExtension(filename).toUpperCase()),
+                    (int) file.getSize(),
+                    width,
+                    height
+            );
+        } catch (IOException e) {
+            throw new CustomException("Failed to read file " + e.toString(), e);
+        }
+
+    }
+
+    public AudioModel storeAudio(MultipartFile file) {
+        String filename = this.store(file, StorageType.AUDIO);
+
+        try {
+            Header h = null;
+            var newFile = new FileInputStream(String.valueOf(this.rootLocation.resolve(filename)));
+            var bitstream = new Bitstream(newFile);
+            h = bitstream.readFrame();
+            // Get the audio format.
+
+            long tn = newFile.getChannel().size();
+            var duration = h.total_ms((int) tn)/1000;
+
+            return new AudioModel(
+                    UUID.randomUUID().toString(),
+                    filename,
+                    filename,
+                    ExtensionFile.valueOf(StringUtils.getFilenameExtension(filename).toUpperCase()),
+                    (int) file.getSize(),
+                    duration
+            );
+        }catch (Exception e) {
+            throw new CustomException("Failed to read file " + e.toString(), e);
+        }
+
+    }
 }
